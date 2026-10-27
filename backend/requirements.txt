@@ -1,0 +1,31 @@
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+python-multipart==0.0.9
+pydantic==2.9.2
+
+# CSV
+pandas>=2.2.3
+openpyxl==3.1.5
+
+# Images
+Pillow>=10.4.0
+opencv-python-headless>=4.10.0.84
+
+# Audio
+librosa==0.10.2
+soundfile==0.12.1
+
+# Text
+chardet==5.2.0
+
+# Reports
+reportlab==4.2.5
+
+# Utilities
+python-dateutil==2.9.0
+aiofiles==23.2.1
+numpy>=1.26.4
+imagehash>=4.3.1
+
+# LLM / .env support
+python-dotenv>=1.0.0

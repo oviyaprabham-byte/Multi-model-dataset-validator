@@ -1,0 +1,53 @@
+# ── Python ────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+*.so
+.eggs/
+
+# Virtual environments
+venv/
+env/
+.env/
+.venv/
+
+# ── FastAPI / Backend ─────────────────────────────────────
+backend/uploads/*
+!backend/uploads/.gitkeep
+backend/reports/*
+!backend/reports/.gitkeep
+backend/history.json
+backend/sessions_store.json
+backend/docs_store.json
+backend/chat_history.json
+backend/static/
+backend/venv/
+
+# ── Node / Frontend ───────────────────────────────────────
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# ── Environment ───────────────────────────────────────────
+.env
+.env.local
+.env.production
+.env.staging
+
+# ── OS files ──────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── IDE ───────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo

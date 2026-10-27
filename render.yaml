@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: dataset-validator
+    runtime: python
+    region: oregon
+    plan: free
+
+    # Working directory: repo root
+    rootDir: .
+
+    # Build: compile frontend → copy to backend/static → install Python deps
+    buildCommand: "./build.sh"
+
+    # Start: serve FastAPI (also serves the built React SPA)
+    startCommand: "cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT"
+
+    # Environment variables — set real values in the Render dashboard
+    envVars:
+      - key: LLM_PROVIDER
+        value: none          # Change to openai / anthropic / google if needed
+      - key: LLM_API_KEY
+        value: ""            # Set your key in the Render dashboard (keep secret)
+      - key: LLM_MODEL
+        value: ""
+      - key: PYTHON_VERSION
+        value: "3.11.0"
