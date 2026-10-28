@@ -24,11 +24,28 @@ from services.report_generator import generate_pdf, generate_excel
 from routers.doc_router import router as doc_router, auto_generate_doc
 from routers.agent_router import router as agent_router
 
+from contextlib import asynccontextmanager
+import logging
+
+logger = logging.getLogger("uvicorn.error")
+
+@asynccontextmanager
+async def lifespan(app):
+    # Startup: log static dir status
+    static = Path("static")
+    if static.exists():
+        files = list(static.iterdir())
+        logger.info(f"Static dir found with {len(files)} items: {[f.name for f in files]}")
+    else:
+        logger.warning("Static dir NOT found — frontend will not be served!")
+    yield
+
 # ── App Setup ──────────────────────────────────────────────────────────────
 app = FastAPI(
     title="Dataset Validator API",
     description="Multi-Modal Intelligent Dataset Validator",
     version="1.0.0",
+    lifespan=lifespan,
 )
 
 app.add_middleware(
@@ -364,23 +381,29 @@ def clear_all_history():
 
 # ── Serve React frontend (production build) ───────────────────────────────
 STATIC_DIR = Path("static")
-if STATIC_DIR.exists():
-    # Mount the full static directory so CSS/JS/assets are served correctly
-    app.mount("/assets", StaticFiles(directory=str(STATIC_DIR / "assets")), name="assets")
-    app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static-files")
 
-    @app.get("/{full_path:path}", include_in_schema=False)
-    async def serve_spa(full_path: str):
-        """Catch-all: serve index.html for React Router (SPA fallback)."""
-        # Try to serve the exact file first
-        requested = STATIC_DIR / full_path
-        if requested.exists() and requested.is_file():
-            return FileResponse(str(requested))
-        # Fallback to index.html for client-side routing
-        index = STATIC_DIR / "index.html"
-        if index.exists():
-            return FileResponse(str(index))
-        return {"detail": "Frontend not built"}
+# Mount assets directory for CSS/JS bundles (must be before the catch-all)
+if STATIC_DIR.exists() and (STATIC_DIR / "assets").exists():
+    app.mount("/assets", StaticFiles(directory=str(STATIC_DIR / "assets")), name="assets")
+
+
+@app.get("/{full_path:path}", include_in_schema=False)
+async def serve_spa(full_path: str):
+    """Catch-all: serve index.html for React Router (SPA fallback)."""
+    if not STATIC_DIR.exists():
+        return {"detail": "Frontend not built — static dir missing"}
+
+    # Serve exact static files (favicon, manifest, etc.)
+    requested = STATIC_DIR / full_path
+    if requested.exists() and requested.is_file():
+        return FileResponse(str(requested))
+
+    # All other routes → index.html (React Router handles client-side routing)
+    index = STATIC_DIR / "index.html"
+    if index.exists():
+        return FileResponse(str(index))
+
+    return {"detail": "Frontend not built — index.html missing"}
 
 
 if __name__ == "__main__":
