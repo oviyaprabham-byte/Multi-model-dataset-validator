@@ -158,6 +158,9 @@ def determine_readiness(issues, quality_score_val):
 
 @app.get("/")
 def root():
+    index = Path("static") / "index.html"
+    if index.exists():
+        return FileResponse(str(index))
     return {"message": "Dataset Validator API v1.0", "status": "running"}
 
 
@@ -362,14 +365,18 @@ def clear_all_history():
 # ── Serve React frontend (production build) ───────────────────────────────
 STATIC_DIR = Path("static")
 if STATIC_DIR.exists():
-    # Mount assets sub-directory first
-    assets_dir = STATIC_DIR / "assets"
-    if assets_dir.exists():
-        app.mount("/assets", StaticFiles(directory=str(assets_dir)), name="assets")
+    # Mount the full static directory so CSS/JS/assets are served correctly
+    app.mount("/assets", StaticFiles(directory=str(STATIC_DIR / "assets")), name="assets")
+    app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static-files")
 
     @app.get("/{full_path:path}", include_in_schema=False)
     async def serve_spa(full_path: str):
         """Catch-all: serve index.html for React Router (SPA fallback)."""
+        # Try to serve the exact file first
+        requested = STATIC_DIR / full_path
+        if requested.exists() and requested.is_file():
+            return FileResponse(str(requested))
+        # Fallback to index.html for client-side routing
         index = STATIC_DIR / "index.html"
         if index.exists():
             return FileResponse(str(index))
